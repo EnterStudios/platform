@@ -3,21 +3,92 @@ This file is covered by the EUPL license.
 You may obtain a copy of the licence at
 https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence-eupl-v11 -->
 <template name="aclPage">
-    <div class="container">
-      <strong class="text-uppercase">
-        Access control rules
-      </strong>
-      <p>
-        Text explains what is that
-      </p>
+  <div class="container">
+    <strong class="text-uppercase">
+      Access control rules
+    </strong>
+    <p>
+      Text explains what is that
+    </p>
+
+    <table class="table table-bordered table-hover">
+      <thead>
+      <tr>
+        <th>Allow/Deny</th>
+        <th>Pub/Sub/Pubsub</th>
+        <th>Topic</th>
+        <th>Username</th>
+        <th>IP Address</th>
+        <th>Client ID</th>
+      </tr>
+      </thead>
+      <tbody>
+      {{# each rule in aclRules }}
+        <tr class="acl-rule">
+          <td>
+            {{ rule.allow }}
+          </td>
+          <td>
+            {{ rule.access }}
+          </td>
+          <td>
+            {{ rule.topic }}
+          </td>
+          <td>
+            {{ rule.username }}
+          </td>
+          <td>
+            {{ rule.ipaddr }}
+          </td>
+          <td>
+            {{ rule.clientid }}
+          </td>
+          <td>
+            <button class="btn btn-xs btn-info acl-edit" data-id="{{ rule._id }}" data-pid="{{ rule.pid }}">
+              Edit
+            </button>
+            <button class="btn btn-xs btn-danger acl-delete" data-id="{{ rule._id }}" data-pid="{{ rule.pid }}">
+              Delete
+            </button>
+          <button class="edit" data-pid="{{ rule.pid }}">CLICK</button>
+          </td>
+        </tr>
+      {{/ each }}
+      <tr>
+        <td id="add-acl">
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          Add rule
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    {{# if formEdited }}
+      {{> addForm id=aclId }}
+    {{/ if }}
+
+  </div>
+</template>
+
+<template name="addForm">
+  <div class="row">
+    <div class="col-xs-12">
       <form>
-        <input type="text" placeholder="Topic" name="topic">
-        <button type="submit" class="btn btn-success btn-sm">
+        {{# with aclRule }}
+        <input class="form-control" type="text" placeholder="id" name="id">
+        <input class="form-control" type="text" placeholder="allow/deny" name="allow" value="{{ allow }}">
+        <input class="form-control" type="text" placeholder="pub/sub/pubsub" name="access" value="{{ access }}">
+        <input class="form-control" type="text" placeholder="Topic" name="topic" value="{{ topic }}">
+        <input class="form-control" type="text" placeholder="username" name="username" value="{{ username }}">
+        <input class="form-control" type="text" placeholder="Client1" name="clientid" value="{{ clientid }}">
+        <input class="form-control" type="text" placeholder="IP Address" name="ipaddr" value="{{ ipaddr }}">
+        {{/ with }}
+            <button type="submit" class="btn btn-success btn-xs">
           Save
         </button>
-        <button type="button" class="btn btn-default btn-sm">
+        <button type="button" class="btn btn-default btn-xs cancel">
           Cancel
         </button>
       </form>
     </div>
+  </div>
 </template>
