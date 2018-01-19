@@ -155,13 +155,9 @@ Template.aclPage.events({
   },
 });
 
-Template.addForm.onRendered(function () {
-  console.log(this.data);
-});
-
 Template.addForm.helpers({
   aclRule () {
-    console.log(this.data);
+    console.log(Template.currentData());
     const id = Template.currentData().id;
 
     return AclRules.findOne(id) || {};
