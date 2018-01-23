@@ -86,6 +86,6 @@ Template.displayTopicsTable.events({
 
     const topicItem = AclRules.findOne(topicId);
 
-    AclRules.update({ _id: topicId }, { $set: { starred: !topicItem.starred }});
+    AclRules.update({ _id: topicId }, { $set: { starred: !topicItem.starred } });
   },
 });
