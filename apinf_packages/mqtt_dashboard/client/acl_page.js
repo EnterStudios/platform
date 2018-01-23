@@ -10,14 +10,14 @@ import { sAlert } from 'meteor/juliancwirko:s-alert';
 import AclRules from '../collection/index';
 
 const allowRules = {
-  'allow': 1,
-  'deny': 0
+  allow: 1,
+  deny: 0,
 };
 
 const accessRules = {
-  'sub': 1,
-  'pub': 2,
-  'pubsub': 3
+  sub: 1,
+  pub: 2,
+  pubsub: 3,
 };
 
 
@@ -119,7 +119,7 @@ Template.aclPage.events({
   'click .edit': (event, template) => {
     const aclPid = event.currentTarget.dataset.pid;
     Meteor.call('getAclRule', aclPid, template.params, (error, result) => {
-      console.log('result123', result)
+      console.log('result123', result);
     });
   },
   'click .acl-delete': (event, template) => {
@@ -144,8 +144,7 @@ Template.aclPage.events({
     template.formType = 'update';
   },
   'click .cancel': (event, template) => {
-    template.formEdited.set(false)
-
+    template.formEdited.set(false);
   },
   'click #add-acl': (event, template) => {
     // Display form
@@ -161,5 +160,5 @@ Template.addForm.helpers({
     const id = Template.currentData().id;
 
     return AclRules.findOne(id) || {};
-  }
+  },
 });
