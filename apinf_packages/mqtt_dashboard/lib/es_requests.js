@@ -11,8 +11,9 @@ export function getHistogramData (eventType, dateRange) {
           {
             range: {
               timestamp: {
-                gte: 1515765600000,
-                // lte: dateRange.to,
+                // gte: 1515765600000,
+                gte: dateRange.from,
+                lt: dateRange.to,
               },
             },
           },
@@ -28,9 +29,16 @@ export function getHistogramData (eventType, dateRange) {
       data_over_time: {
         date_histogram: {
           field: 'timestamp',
-          interval: 'day',
+          interval: dateRange.interval,
         },
       },
+      "total_number": {
+        "filter":{
+          "term":{
+            "event":eventType
+          }
+        }
+      }
     },
   };
 }
@@ -61,16 +69,30 @@ export function getPublishedClients (dateRange) {
       data_over_time: {
         date_histogram: {
           field: 'timestamp',
-          interval: 'day',
+          interval: dateRange.interval,
         },
         aggs: {
           pub_clients: {
-            terms: {
-              field: 'from.client_id.keyword',
-            },
+            "cardinality":{
+              "field":"from.client_id.keyword"
+            }
           }
         }
       },
+      "total_number": {
+        "filter": {
+          "term": {
+            "event":'message_published'
+          }
+        },
+        aggs: {
+          pub_clients: {
+            "cardinality":{
+              "field":"from.client_id.keyword"
+            }
+          }
+        }
+      }
     },
   };
 }
@@ -86,8 +108,9 @@ export function getTopicsData (filters, clientFilters, dateRange) {
           {
             range: {
               timestamp: {
-                gte: 1515765600000,
-                // lte: dateRange.to,
+                // gte: 1515765600000,
+                gte: dateRange.from,
+                lt: dateRange.to,
               },
             },
           },
@@ -167,3 +190,73 @@ export function getDataByTopic (filters, dateRange) {
     }
   };
 }
+
+export function previousTotalNumber (dateRange) {
+  return {
+    query: {
+      bool: {
+        must: [
+          {
+            range: {
+              timestamp: {
+                // gte: 1515765600000,
+                gte: dateRange.doublePeriodAgo,
+                lt: dateRange.to,
+              },
+            },
+          },
+        ],
+      },
+    },
+    aggs: {
+      "group_by_interval": {
+        "range": {
+          "field": "timestamp",
+          "keyed": true,
+          "ranges": [
+            {
+              "key": "previousPeriod",
+              "from": dateRange.doublePeriodAgo,
+              "to": dateRange.onePeriodAgo
+            },
+            {
+              "key": "currentPeriod",
+              "from": dateRange.onePeriodAgo,
+              "to": dateRange.to
+            }
+          ]
+        },
+        "aggs": {
+          "message_delivered": {
+            "filter": {
+              "term": {
+                "event":"message_delivered"
+              }
+            }
+          },
+          "client_subscribe": {
+            "filter": {
+              "term": {
+                "event":"client_subscribe"
+              }
+            }
+          },
+          "published": {
+            "filter": {
+              "term": {
+                "event":"message_published"
+              }
+            },
+            "aggs": {
+              "pub_clients": {
+                "cardinality":{
+                  "field":"from.client_id.keyword"
+                }
+              }
+            }
+          }
+        }
+      },
+    },
+  }
+};
