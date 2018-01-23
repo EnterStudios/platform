@@ -51,9 +51,6 @@ Template.displayTopicsTable.onCreated(function () {
       const messagesBucket = result.aggregations.group_by_topic.buckets;
       const clientBucket = result.aggregations.clients.buckets;
 
-      console.log('messagesBucket', messagesBucket);
-      console.log('clientBucket', clientBucket);
-
       this.topicsData.forEach(topicItem => {
         const mb = messagesBucket[topicItem.value];
         const cb = clientBucket[topicItem.value];
