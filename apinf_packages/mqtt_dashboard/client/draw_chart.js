@@ -16,35 +16,30 @@ Template.drawChart.onRendered(function () {
 
     // Data for displaying chart
     data: {
-      labels: ["2"],
+      labels: [],
       datasets: [
         {
           backgroundColor: '#e3f2fc',
           borderColor: '#3886d4',
           borderWidth: 2,
-          data: [1],
+          data: [],
           pointRadius: 0,
-          pointHoverRadius: 3,
+          pointHoverRadius: 5,
         },
       ],
     },
 
     // Configuration options
     options: {
-      layout: {
-        padding: {
-          left: 10,
-          right: 10,
-          top: 10,
-          bottom: 10
-        }
-      },
       scales: {
         xAxes: [{
           display: false,
         }],
         yAxes: [{
           display: false,
+          ticks: {
+            beginAtZero: true,
+          },
         }],
 
       },
@@ -69,14 +64,31 @@ Template.drawChart.onRendered(function () {
   this.autorun(() => {
     const aggregatedData = Template.currentData().aggregatedData;
 
-    console.log(aggregatedData)
     if (aggregatedData) {
-      aggregatedData.forEach(dataset => {
-        const date = moment(dataset.key).format('DD/MM');
+      const chartType = Template.currentData().chartType;
 
-        this.chart.data.labels.push(date);
-        this.chart.data.datasets[0].data.push(dataset.doc_count);
-      });
+      if (chartType === 'real-time') {
+        aggregatedData.forEach(dataset => {
+          const date = moment(dataset.key).format('HH:mm:ss');
+
+          this.chart.data.labels.push(date);
+          this.chart.data.datasets[0].data.push(dataset.doc_count);
+        });
+      } else {
+        if (aggregatedData.length === 1) {
+          this.chart.data.datasets[0].pointRadius = 2;
+        } else {
+          this.chart.data.datasets[0].pointRadius = 0;
+        }
+
+        this.chart.data.labels = aggregatedData.map(dataset => {
+          return moment(dataset.key).format('DD/MM');
+        });
+
+        this.chart.data.datasets[0].data = aggregatedData.map(dataset => {
+          return dataset.doc_count;
+        });
+      }
 
       this.chart.update();
     }

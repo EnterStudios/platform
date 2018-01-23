@@ -2,11 +2,10 @@
   This file is covered by the EUPL license.
   You may obtain a copy of the licence at
   https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence-eupl-v11 */
-import { check } from 'meteor/check'
+import { check } from 'meteor/check';
 
 Meteor.methods({
   async addAclRule (data, params) {
-
     try {
       return await HTTP.post(params.fullUrl, { data });
     } catch (e) {
@@ -36,9 +35,9 @@ Meteor.methods({
     return new Promise((resolve, reject) => {
       HTTP.get(params.fullUrl, { params: { id: `eq.${pid}` } }, (error, result) => {
         if (error) {
-          reject(error)
+          reject(error);
         } else {
-          resolve(result)
+          resolve(result);
         }
       });
     });

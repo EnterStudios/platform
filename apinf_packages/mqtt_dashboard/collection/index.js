@@ -3,7 +3,7 @@
   You may obtain a copy of the licence at
   https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence-eupl-v11 */
 
-import {Mongo} from "meteor/mongo";
+import { Mongo } from 'meteor/mongo';
 
 const AclRules = new Mongo.Collection('aclRules');
 

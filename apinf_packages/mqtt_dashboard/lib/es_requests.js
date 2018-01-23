@@ -32,13 +32,13 @@ export function getHistogramData (eventType, dateRange) {
           interval: dateRange.interval,
         },
       },
-      "total_number": {
-        "filter":{
-          "term":{
-            "event":eventType
-          }
-        }
-      }
+      total_number: {
+        filter: {
+          term: {
+            event: eventType,
+          },
+        },
+      },
     },
   };
 }
@@ -73,26 +73,26 @@ export function getPublishedClients (dateRange) {
         },
         aggs: {
           pub_clients: {
-            "cardinality":{
-              "field":"from.client_id.keyword"
-            }
-          }
-        }
+            cardinality: {
+              field: 'from.client_id.keyword',
+            },
+          },
+        },
       },
-      "total_number": {
-        "filter": {
-          "term": {
-            "event":'message_published'
-          }
+      total_number: {
+        filter: {
+          term: {
+            event: 'message_published',
+          },
         },
         aggs: {
           pub_clients: {
-            "cardinality":{
-              "field":"from.client_id.keyword"
-            }
-          }
-        }
-      }
+            cardinality: {
+              field: 'from.client_id.keyword',
+            },
+          },
+        },
+      },
     },
   };
 }
@@ -121,34 +121,34 @@ export function getTopicsData (filters, clientFilters, dateRange) {
       group_by_topic: {
         filters,
         aggs: {
-          "message_published":{
-            "filter":{
-              "term":{
-                "event":"message_published"
-              }
+          message_published: {
+            filter: {
+              term: {
+                event: 'message_published',
+              },
             },
-            "aggs": {
-              "client_publish":{
-                "cardinality":{
-                  "field":"from.client_id.keyword"
-                }
-              }
-            }
-          }
+            aggs: {
+              client_publish: {
+                cardinality: {
+                  field: 'from.client_id.keyword',
+                },
+              },
+            },
+          },
         },
       },
       clients: {
         filters: clientFilters,
         aggs: {
-          "client_subscribe":{
-            "filter":{
-              "term":{
-                "event":"client_subscribe"
-              }
-            }
-          }
-        }
-      }
+          client_subscribe: {
+            filter: {
+              term: {
+                event: 'client_subscribe',
+              },
+            },
+          },
+        },
+      },
     },
   };
 }
@@ -168,26 +168,26 @@ export function getDataByTopic (filters, dateRange) {
           },
           {
             term: {
-              "topic.keyword": "/sm5logger/37",
+              'topic.keyword': '/sm5logger/37',
             },
           },
         ],
       },
     },
 
-    "aggs": {
-      "group_by_topics": {
-        "filters": {
-          "filters": {
-            "topic40": {
-              "prefix": {
-                "topic" : "/sm5logger/40"
-              }
-            }
-          }
-        }
-      }
-    }
+    aggs: {
+      group_by_topics: {
+        filters: {
+          filters: {
+            topic40: {
+              prefix: {
+                topic: '/sm5logger/40',
+              },
+            },
+          },
+        },
+      },
+    },
   };
 }
 
@@ -209,54 +209,54 @@ export function previousTotalNumber (dateRange) {
       },
     },
     aggs: {
-      "group_by_interval": {
-        "range": {
-          "field": "timestamp",
-          "keyed": true,
-          "ranges": [
+      group_by_interval: {
+        range: {
+          field: 'timestamp',
+          keyed: true,
+          ranges: [
             {
-              "key": "previousPeriod",
-              "from": dateRange.doublePeriodAgo,
-              "to": dateRange.onePeriodAgo
+              key: 'previousPeriod',
+              from: dateRange.doublePeriodAgo,
+              to: dateRange.onePeriodAgo,
             },
             {
-              "key": "currentPeriod",
-              "from": dateRange.onePeriodAgo,
-              "to": dateRange.to
-            }
-          ]
+              key: 'currentPeriod',
+              from: dateRange.onePeriodAgo,
+              to: dateRange.to,
+            },
+          ],
         },
-        "aggs": {
-          "message_delivered": {
-            "filter": {
-              "term": {
-                "event":"message_delivered"
-              }
-            }
-          },
-          "client_subscribe": {
-            "filter": {
-              "term": {
-                "event":"client_subscribe"
-              }
-            }
-          },
-          "published": {
-            "filter": {
-              "term": {
-                "event":"message_published"
-              }
+        aggs: {
+          message_delivered: {
+            filter: {
+              term: {
+                event: 'message_delivered',
+              },
             },
-            "aggs": {
-              "pub_clients": {
-                "cardinality":{
-                  "field":"from.client_id.keyword"
-                }
-              }
-            }
-          }
-        }
+          },
+          client_subscribe: {
+            filter: {
+              term: {
+                event: 'client_subscribe',
+              },
+            },
+          },
+          published: {
+            filter: {
+              term: {
+                event: 'message_published',
+              },
+            },
+            aggs: {
+              pub_clients: {
+                cardinality: {
+                  field: 'from.client_id.keyword',
+                },
+              },
+            },
+          },
+        },
       },
     },
-  }
-};
+  };
+}
