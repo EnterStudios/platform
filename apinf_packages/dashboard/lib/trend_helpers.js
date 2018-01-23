@@ -27,7 +27,19 @@ export function arrowDirection (parameter, bucket) {
       break;
 
     case 'pub_messages':
-      comparison = bucket.comparePubMessages;
+      comparison = bucket.pubMessages;
+      break;
+
+    case 'del_messages':
+      comparison = bucket.delMessages;
+      break;
+
+    case 'sub_client':
+      comparison = bucket.subClients;
+      break;
+
+    case 'pub_client':
+      comparison = bucket.pubClients;
       break;
 
     default:
@@ -66,7 +78,16 @@ export function percentageValue (parameter, bucket) {
       comparison = bucket.compareUsers;
       break;
     case 'pub_messages':
-      comparison = bucket.comparePubMessages;
+      comparison = bucket.pubMessages;
+      break;
+    case 'del_messages':
+      comparison = bucket.delMessages;
+      break;
+    case 'sub_client':
+      comparison = bucket.subClients;
+      break;
+    case 'pub_client':
+      comparison = bucket.pubClients;
       break;
     default:
       comparison = 0;
