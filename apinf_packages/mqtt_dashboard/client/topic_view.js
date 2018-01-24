@@ -132,8 +132,6 @@ Template.topicPage.onCreated(function () {
       // Send request
       instance.sendRequest();
       if (timeframe === '1') {
-        instance.chartType.set('real-time');
-
         instance.intervalId = setInterval(() => {
           console.log('set interval');
           this.queryOption.interval = 'minute';
@@ -149,8 +147,6 @@ Template.topicPage.onCreated(function () {
           this.totalNumberRequest(this.queryOption, 'current', topic);
         }, 60000);
       } else {
-        instance.chartType.set('no-real-time');
-
         // Turn off real-time update
         clearInterval(instance.intervalId);
       }
