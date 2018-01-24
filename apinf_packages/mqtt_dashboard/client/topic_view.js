@@ -7,23 +7,32 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { Meteor } from 'meteor/meteor';
 import { Template } from 'meteor/templating';
 
-import { getParticularTopicData } from '../lib/es_requests';
+import { getParticularTopicData, getTopicEventTypesData } from '../lib/es_requests';
 import moment from 'moment';
 import AclRules from '../collection';
 import { getDateRange } from './helpers';
+import {arrowDirection, calculateTrend, percentageValue} from '../../dashboard/lib/trend_helpers';
 
 Template.topicPage.onCreated(function () {
 // Subscription
   const instance = this;
 
   let subscription;
-  this.dataType = new ReactiveVar('message_published');
+  this.eventType = new ReactiveVar('message_published');
   this.aggregatedData = new ReactiveVar();
   this.chartType = new ReactiveVar('real-time');
   this.timeframe = new ReactiveVar('1');
-  this.topic = new ReactiveVar();
-  this.totalNumber = new ReactiveVar(0);
+  this.summaryStatistics = new ReactiveVar({
+    message_published: 0,
+    message_delivered: 0,
+    client_publish: 0,
+    client_subscribe: 0,
+  });
+
   instance.trend = new ReactiveVar({});
+  instance.topic = new ReactiveVar();
+
+  this.previousPeriod = new ReactiveVar();
 
   // Subscrube to ACL document
   this.autorun(() => {
@@ -37,41 +46,7 @@ Template.topicPage.onCreated(function () {
       if (isReady) {
         const acl = AclRules.findOne();
 
-        const topic = acl.topic;
-
-        // Get Even type & timeframe
-        const eventType = this.dataType.get();
-        const timeframe = this.timeframe.get();
-
-        instance.queryOption = getDateRange(timeframe);
-
-        // Create request body to fetch data for Chart and total number
-        instance.requestBody = getParticularTopicData(eventType, this.queryOption, topic);
-        // Send request
-        instance.sendRequest();
-
-        // console.log(JSON.stringify(instance.requestBody))
-
-        if (timeframe === '1') {
-          instance.chartType.set('real-time');
-
-          instance.intervalId = setInterval(() => {
-            this.queryOption.interval = 'minute';
-
-            this.queryOption.from = this.queryOption.to;
-            this.queryOption.to = moment(this.queryOption.from).add(60, 's').valueOf();
-
-            // Create request body to fetch data for Chart and total number
-            instance.requestBody = getParticularTopicData(eventType, this.queryOption, topic);
-            // Send request
-            this.sendRequest();
-          }, 60000);
-        } else {
-          instance.chartType.set('no-real-time');
-
-          // Turn off real-time update
-          clearInterval(instance.intervalId);
-        }
+        this.topic.set(acl.topic);
       }
     }
   });
@@ -82,14 +57,12 @@ Template.topicPage.onCreated(function () {
         sAlert.error(error.message);
       } else {
         const elasticsearchData = result.aggregations.data_over_time.buckets;
-        const totalNumber = this.totalNumber.get();
 
-        if (this.dataType.get() === 'client_publish') {
+        if (this.eventType.get() === 'client_publish') {
           const pubslihedClients = publishedClients(elasticsearchData, this.queryOption.from);
 
           this.aggregatedData.set(pubslihedClients);
 
-          this.totalNumber.set(totalNumber+result.aggregations.total_number.client_publish.value);
         } else {
           if (elasticsearchData.length === 0) {
             // Set
@@ -100,11 +73,110 @@ Template.topicPage.onCreated(function () {
           }
 
           this.aggregatedData.set(elasticsearchData);
-          this.totalNumber.set(totalNumber + result.aggregations.total_number.doc_count);
         }
       }
     });
   };
+
+  this.totalNumberRequest = (dateRange, periodType, topic) => {
+    const requestBody = getTopicEventTypesData(dateRange, topic);
+    Meteor.call('sendElastisticsearchRequest', requestBody, (error, result) => {
+      if (error) {
+        sAlert.error(error.message);
+        throw new Meteor.Error(error.message);
+      }
+
+      if (periodType === 'current') {
+        const currentPeriod = result.aggregations;
+
+        const data = this.summaryStatistics.get();
+
+        this.summaryStatistics.set({
+          message_published:
+          data.message_published + currentPeriod.topic_types.message_published.doc_count,
+          message_delivered:
+          data.message_delivered + currentPeriod.topic_types.message_delivered.doc_count,
+          client_publish: data.client_publish + currentPeriod.topic_types.message_published.client_published.value,
+          client_subscribe: data.client_subscribe + currentPeriod.client_subscribe.doc_count,
+        });
+      } else {
+        this.previousPeriod.set(result.aggregations);
+      }
+    });
+  };
+
+  // Update total numbers of request while Timeframe is updated
+  this.autorun(() => {
+    console.log('update timeframe');
+    const timeframe = this.timeframe.get();
+    const topic = this.topic.get();
+    if (topic) {
+      this.queryOption = getDateRange(timeframe);
+
+      this.totalNumberRequest(this.queryOption, 'current', topic);
+      this.totalNumberRequest({ from: this.queryOption.doublePeriodAgo, to: this.queryOption.onePeriodAgo }, 'previous', topic);
+    }
+  });
+
+  // Watching at changes of Event type & timeframe to update Charts
+  this.autorun(() => {
+    // Get Even type
+    const eventType = this.eventType.get();
+    const timeframe = this.timeframe.get();
+    const topic = this.topic.get();
+    console.log('update event type');
+
+    if (topic) {
+      // Create request body to fetch data for Chart and total number
+      instance.requestBody = getParticularTopicData(eventType, this.queryOption, topic);
+      // Send request
+      instance.sendRequest();
+      if (timeframe === '1') {
+        instance.chartType.set('real-time');
+
+        instance.intervalId = setInterval(() => {
+          console.log('set interval');
+          this.queryOption.interval = 'minute';
+
+          this.queryOption.from = this.queryOption.to;
+          this.queryOption.to = moment(this.queryOption.from).add(60, 's').valueOf();
+
+          // Create request body to fetch data for Chart and total number
+          instance.requestBody = getParticularTopicData(eventType, this.queryOption, topic);
+          // Send request
+          this.sendRequest();
+          // Update Total numbers of requests as well
+          this.totalNumberRequest(this.queryOption, 'current', topic);
+        }, 60000);
+      } else {
+        instance.chartType.set('no-real-time');
+
+        // Turn off real-time update
+        clearInterval(instance.intervalId);
+      }
+    }
+  });
+
+  // Upda compare data
+  this.autorun(() => {
+    const data = this.summaryStatistics.get();
+
+    const previousPeriod = this.previousPeriod.get();
+
+    if (previousPeriod) {
+      const compareData = {
+        pubMessages:
+          calculateTrend(previousPeriod.topic_types.message_published.doc_count, data.message_published),
+        delMessages:
+          calculateTrend(previousPeriod.topic_types.message_delivered.doc_count, data.message_delivered),
+        subClients:
+          calculateTrend(previousPeriod.client_subscribe.doc_count, data.client_subscribe),
+        pubClients:
+          calculateTrend(previousPeriod.topic_types.message_published.client_published.value, data.client_publish),
+      };
+      instance.trend.set(compareData);
+    }
+  });
 });
 
 Template.topicPage.helpers({
@@ -112,26 +184,48 @@ Template.topicPage.helpers({
     return Template.instance().aggregatedData.get();
   },
   topicValue () {
-    return AclRules.findOne().topic;
+    return Template.instance().topic.get();
   },
   chartType () {
     return Template.instance().chartType.get();
   },
-  totalNumber () {
-    return Template.instance().totalNumber.get();
+  totalNumber (param) {
+    const data = Template.instance().summaryStatistics.get();
+
+    return data[param];
+  },
+  arrowDirection (param) {
+    const trend = Template.instance().trend.get();
+
+    return arrowDirection(param, trend);
+  },
+  percentageValue (param) {
+    const trend = Template.instance().trend.get();
+
+    return percentageValue(param, trend);
+  },
+  textColor (param) {
+    const trend = Template.instance().trend.get();
+
+    const direction = arrowDirection(param, trend);
+
+    return direction === 'arrow-up' ? 'text-green' : 'text-red';
+  },
+  realTimeMode () {
+    const timeframe = Template.instance().timeframe.get();
+
+    return timeframe === '1';
   },
 });
 
 Template.topicPage.events({
   'click [name="data-type"]': (event, templateInstance) => {
-    const dataType = event.currentTarget.value;
-    templateInstance.dataType.set(dataType);
-    templateInstance.totalNumber.set(0);
+    const eventType = event.currentTarget.value;
+    templateInstance.eventType.set(eventType);
   },
   'change #date-range-picker': (event, templateInstance) => {
     const value = event.currentTarget.value;
     templateInstance.timeframe.set(value);
-    templateInstance.totalNumber.set(0);
   },
 });
 

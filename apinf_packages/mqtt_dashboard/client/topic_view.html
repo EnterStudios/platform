@@ -7,28 +7,52 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
   <div class="container">
     {{# if Template.subscriptionsReady }}
       <p>
-        {{ topicValue }} {{totalNumber}}
+        {{ topicValue }}
       </p>
       {{> dateRangePickerMqtt }}
       <div class="row form-group">
         <div class="col-xs-12">
           <label class="radio-inline">
-            <input type="radio" name="data-type" value="message_published" checked> Published Messages
+            <input type="radio" name="data-type" value="message_published" checked>
+            Published Messages {{ totalNumber 'message_published' }}
+            <span class={{ textColor 'pub_messages' }}>
+              <i class="fa fa-{{ arrowDirection 'pub_messages' }}" aria-hidden="true"></i>
+              {{ percentageValue 'pub_messages' }}
+            </span>
           </label>
           <label class="radio-inline">
-            <input type="radio" name="data-type" value="del-messages"> Delivered Messages
+            <input type="radio" name="data-type" value="message_delivered">
+            Delivered Messages {{ totalNumber 'message_delivered' }}
+            <span class={{ textColor 'del_messages' }}>
+              <i class="fa fa-{{ arrowDirection 'del_messages' }}" aria-hidden="true"></i>
+              {{ percentageValue 'del_messages' }}
+            </span>
           </label>
           <label class="radio-inline">
-            <input type="radio" name="data-type" value="client_subscribe"> Subscribe Clients
+            <input type="radio" name="data-type" value="client_subscribe">
+            Subscribe Clients {{ totalNumber 'client_subscribe' }}
+            <span class={{ textColor 'spub_client' }}>
+              <i class="fa fa-{{ arrowDirection 'sub_client' }}" aria-hidden="true"></i>
+              {{ percentageValue 'sub_client' }}
+            </span>
           </label>
           <label class="radio-inline">
-            <input type="radio" name="data-type" value="client_publish"> Published Clients
+            <input type="radio" name="data-type" value="client_publish">
+            Published Clients {{ totalNumber 'client_publish' }}
+            <span class={{ textColor 'pub_client' }}>
+              <i class="fa fa-{{ arrowDirection 'pub_client' }}" aria-hidden="true"></i>
+              {{ percentageValue 'pub_client' }}
+            </span>
           </label>
         </div>
       </div>
       <div class="row">
-        <div class="col-xs-6">
-          {{> drawChart aggregatedData=aggregatedData query='published-clients' labelFormat=labelFormat}}
+        <div class="col-xs-12">
+          {{# if realTimeMode }}
+            {{> displayRealTimeChart aggregatedData=aggregatedData query='display-chart' }}
+          {{ else }}
+            {{> displayGeneralChart aggregatedData=aggregatedData query='display-chart'}}
+          {{/ if }}
         </div>
       </div>
     {{ else }}

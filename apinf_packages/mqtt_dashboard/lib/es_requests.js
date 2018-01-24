@@ -11,7 +11,6 @@ export function getHistogramData (eventType, dateRange) {
           {
             range: {
               timestamp: {
-                // gte: 1515765600000,
                 gte: dateRange.from,
                 lt: dateRange.to,
               },
@@ -97,9 +96,6 @@ export function getPublishedClients (dateRange) {
   };
 }
 
-// aggregations.data_over_time.buckets -- Array
-// [0].pub_clients.buckets.length -- count of unique users
-
 export function getTopicsData (filters, clientFilters, dateRange) {
   return {
     query: {
@@ -108,8 +104,7 @@ export function getTopicsData (filters, clientFilters, dateRange) {
           {
             range: {
               timestamp: {
-                // gte: 1515765600000,
-                gte: dateRange.from,
+                gte: dateRange.doublePeriodAgo,
                 lt: dateRange.to,
               },
             },
@@ -118,70 +113,59 @@ export function getTopicsData (filters, clientFilters, dateRange) {
       },
     },
     aggs: {
-      group_by_topic: {
-        filters,
-        aggs: {
-          message_published: {
-            filter: {
-              term: {
-                event: 'message_published',
-              },
+      group_by_interval: {
+        range: {
+          field: 'timestamp',
+          keyed: true,
+          ranges: [
+            {
+              key: 'previousPeriod',
+              from: dateRange.doublePeriodAgo,
+              to: dateRange.onePeriodAgo,
             },
+            {
+              key: 'currentPeriod',
+              from: dateRange.onePeriodAgo,
+              to: dateRange.to,
+            },
+          ],
+        },
+        aggs: {
+          group_by_topic: {
+            filters,
             aggs: {
-              client_publish: {
-                cardinality: {
-                  field: 'from.client_id.keyword',
+              message_published: {
+                filter: {
+                  term: {
+                    event: 'message_published',
+                  },
+                },
+                aggs: {
+                  client_publish: {
+                    cardinality: {
+                      field: 'from.client_id.keyword',
+                    },
+                  },
                 },
               },
+              message_delivered: {
+                filter: {
+                  term: {
+                    event: 'message_delivered'
+                  }
+                }
+              }
             },
           },
-        },
-      },
-      clients: {
-        filters: clientFilters,
-        aggs: {
-          client_subscribe: {
-            filter: {
-              term: {
-                event: 'client_subscribe',
-              },
-            },
-          },
-        },
-      },
-    },
-  };
-}
-
-export function getDataByTopic (filters, dateRange) {
-  return {
-    query: {
-      bool: {
-        must: [
-          {
-            range: {
-              timestamp: {
-                gte: dateRange.from,
-                lte: dateRange.to,
-              },
-            },
-          },
-          {
-            term: {
-              'topic.keyword': '/sm5logger/37',
-            },
-          },
-        ],
-      },
-    },
-
-    aggs: {
-      group_by_topics: {
-        filters: {
-          filters: {
-            topic40: {
-              prefix: {
-                topic: '/sm5logger/40',
+          clients: {
+            filters: clientFilters,
+            aggs: {
+              client_subscribe: {
+                filter: {
+                  term: {
+                    event: 'client_subscribe',
+                  },
+                },
               },
             },
           },
@@ -199,7 +183,6 @@ export function previousTotalNumber (dateRange) {
           {
             range: {
               timestamp: {
-                // gte: 1515765600000,
                 gte: dateRange.doublePeriodAgo,
                 lt: dateRange.to,
               },
@@ -256,6 +239,109 @@ export function previousTotalNumber (dateRange) {
             },
           },
         },
+      },
+    },
+  };
+}
+
+export function getParticularTopicData (eventType, dateRange, topicValue) {
+  let topicFilter = { prefix: { 'topic.keyword': topicValue } };
+  let clientPublishFilter = {};
+
+  switch (eventType) {
+    case 'client_publish':
+      clientPublishFilter = {
+        client_publish: {
+          cardinality: { field: 'from.client_id.keyword' },
+        },
+      };
+      break;
+    case 'client_subscribe':
+      topicFilter = { term: { [`topics.${topicValue}.qos`]: 0 } };
+      break;
+    default:
+      clientPublishFilter = {};
+      break;
+  }
+
+  return {
+    query: {
+      bool: {
+        must: [
+          {
+            range: {
+              timestamp: {
+                gte: dateRange.from,
+                lt: dateRange.to,
+              },
+            },
+          },
+          {
+            term: {
+              event: eventType,
+            },
+          },
+          topicFilter,
+        ],
+      },
+    },
+    aggs: {
+      data_over_time: {
+        date_histogram: {
+          field: 'timestamp',
+          interval: dateRange.interval,
+        },
+        aggs: clientPublishFilter,
+      },
+    },
+  };
+}
+
+export function getTopicEventTypesData (dateRange, topic) {
+  return {
+    query: {
+      bool: {
+        must: [
+          {
+            range: {
+              timestamp: {
+                gte: dateRange.from,
+                lt: dateRange.to,
+              },
+            },
+          },
+        ],
+      },
+    },
+    aggs: {
+      topic_types: {
+        "filter": { "prefix": { "topic.keyword": topic }},
+        "aggs": {
+          "message_delivered": {
+            "filter": {
+              "term": {
+                "event": "message_delivered"
+              }
+            }
+          },
+          "message_published": {
+            "filter": {
+              "term": {
+                "event": "message_published"
+              }
+            },
+            "aggs": {
+              "client_published": {
+                "cardinality": {
+                  "field": "from.client_id.keyword"
+                }
+              }
+            }
+          }
+        }
+      },
+      client_subscribe: {
+        filter: { term: { [`topics.${topic}.qos`]: 0 } },
       },
     },
   };
