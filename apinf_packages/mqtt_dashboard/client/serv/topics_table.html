@@ -4,6 +4,10 @@ You may obtain a copy of the licence at
 https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence-eupl-v11 -->
 
 <template name="displayTopicsTable">
+  <div class="form-group">
+    {{> dateRangePickerMqtt }}
+  </div>
+
   <table class="table table-bordered table-hover">
     <thead>
     <tr>
@@ -18,20 +22,30 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
     </thead>
     <tbody>
     {{# each topic in topicsList }}
+      {{# with topic }}
       <tr>
-        <td class="starred" data-id="{{ topic.id }}">
-          <a href="{{ pathFor 'topicPage' id=topic.id }}">
-            {{ topic.value }}
+        <td class="starred" data-id="{{ id }}">
+          <a href="{{ pathFor 'topicPage' id=id }}">
+            {{ value }}
           </a>
-            <i class="fa {{ starred topic.id}}" aria-hidden="true"></i>
+            <i class="fa {{ starred }}" aria-hidden="true"></i>
         </td>
-        <td>{{ topic.incoming }}Mbps</td>
-        <td>{{ topic.outgoing }}Mbps</td>
-        <td>{{ topic.publishedMessages }}</td>
-        <td>{{ topic.deliveredMessages }}</td>
-        <td>{{ topic.publishedClients }}</td>
-        <td>{{ topic.subscribedClients }}</td>
+        <td>{{ incoming }}Mbps</td>
+        <td>{{ outgoing }}Mbps</td>
+        <td>
+          {{ publishedMessages }}
+          {{# if trend }}
+          <span class={{ textColor 'pub_messages' }}>
+            <i class="fa fa-{{ arrowDirection 'pub_messages' }}" aria-hidden="true"></i>
+            {{ percentageValue 'pub_messages' }}
+          </span>
+          {{/ if }}
+        </td>
+        <td>{{ deliveredMessages }}</td>
+        <td>{{ publishedClients }}</td>
+        <td>{{ subscribedClients }}</td>
       </tr>
+        {{/ with }}
     {{/ each }}
     </tbody>
   </table>

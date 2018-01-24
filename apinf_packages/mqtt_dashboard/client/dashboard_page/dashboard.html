@@ -11,39 +11,95 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
     <p>Automatically updates every 5 seconds</p>
 
     <div class="row form-group">
+      <!-- Bandwith -->
       <div class="col-xs-6">
         <strong>Incoming/Outgoing bandwith</strong>
         {{> drawChart aggregatedData=aggregatedData query='bandwith' }}
       </div>
+
       <div class="col-xs-6">
+
         <div class="row">
-          <div class="col-xs-6">
-            <strong>
-              Published messages  {{ publishedMessages }}
-            </strong>
-            <div class="{{ arrowDirection 'pub_messages' }}">{{ percentageValue 'pub_messages' }}</div>
+          <div class="col-xs-6 form-group">
+            <div class="form-group">
+              <div class="margin-block">
+                <small class="text-uppercase">
+                  Published messages
+                </small>
+              </div>
+              <div class="margin-block">
+                <label for="" class="statistics-numbers">
+                  {{ count 'pub-message' }}
+                </label>
+                <span class={{ textColor 'pub_messages' }}>
+                    <i class="fa fa-{{ arrowDirection 'pub_messages' }}" aria-hidden="true"></i>
+                  {{ percentageValue 'pub_messages' }}
+                </span>
+              </div>
+            </div>
             {{> drawChart aggregatedData=publishedMessagesData query='published-messages' }}
           </div>
-          <div class="col-xs-6">
-            <strong>
-              Delivered messages {{ publishedMessages }}
-            </strong>
+
+          <div class="col-xs-6 form-group">
+            <div class="form-group">
+              <div class="margin-block">
+                <small class="text-uppercase">
+                  Delivered messages
+                </small>
+              </div>
+              <div class="margin-block">
+                <label class="statistics-numbers">
+                  {{ count 'del-message' }}
+                </label>
+                <span class={{ textColor 'del_messages' }}>
+                    <i class="fa fa-{{ arrowDirection 'del_messages' }}" aria-hidden="true"></i>
+                  {{ percentageValue 'del_messages' }}
+                </span>
+              </div>
+            </div>
             {{> drawChart aggregatedData=deliveredMessagesData query='delivered-messages' }}
           </div>
-        </div>
-        <div class="row">
-          <div class="col-xs-6">
-            <strong>Published clients</strong>
-            {{> drawChart aggregatedData=publishedClientsData query='published-clients' }}
-          </div>
-          <div class="col-xs-6">
-            <strong>Subscribed clients</strong>
-            {{> drawChart aggregatedData=subscribedClientsData query='subscribed-clients' }}
+
+          <div class="row">
+            <div class="col-xs-6 form-group">
+              <div class="form-group">
+                <div style="margin: 10px;">
+                  <small class="text-uppercase">Published clients</small>
+                </div>
+                <div class="margin-block">
+                  <label class="statistics-numbers">
+                    {{ count 'pub-client' }}
+                  </label>
+                  <span class={{ textColor 'pub_client' }}>
+                    <i class="fa fa-{{ arrowDirection 'pub_client' }}" aria-hidden="true"></i>
+                    {{ percentageValue 'pub_client' }}
+                </span>
+                </div>
+              </div>
+              {{> drawChart aggregatedData=publishedClientsData query='published-clients' }}
+            </div>
+
+            <div class="col-xs-6 form-group">
+              <div class="form-group">
+                <div style="margin: 10px;">
+                  <small class="text-uppercase">Subscribed clients</small>
+                </div>
+                <div class="margin-block">
+                  <label class="statistics-numbers">
+                    {{ count 'sub-client' }}
+                  </label>
+                  <span class={{ textColor 'sub_client' }}>
+                    <i class="fa fa-{{ arrowDirection 'sub_client' }}" aria-hidden="true"></i>
+                    {{ percentageValue 'sub_client' }}
+                </span>
+                </div>
+              </div>
+              {{> drawChart aggregatedData=subscribedClientsData query='subscribed-clients' }}
+            </div>
           </div>
         </div>
       </div>
     </div>
-
     <div class="row">
       <strong class="text-uppercase">
         Starred wildcards

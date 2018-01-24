@@ -9,37 +9,33 @@ import { ReactiveVar } from 'meteor/reactive-var';
 
 import { calculateTrend, arrowDirection, percentageValue }
   from '/apinf_packages/dashboard/lib/trend_helpers';
+import { getDateRange } from '../helpers';
 
-import {getHistogramData, getPublishedClients, getTopicsData} from '../../lib/es_requests';
+import { getHistogramData, getPublishedClients, previousTotalNumber } from '../../lib/es_requests';
 // NPM imports
 import moment from 'moment';
 
+// Collection imports
 import AclRules from '../../collection/index';
 
 Template.mqttDashboardPage.onCreated(function () {
   const instance = this;
-  instance.subscribe('favoriteTopics')
+  instance.subscribe('favoriteTopics');
 
-  instance.queryOption = {
-    // 12/15/2017
-    from: 1515704400000,
-    // "10/04/2017"
-    doublePeriodAgo: 1507064400000,
-    // 10/19/2017
-    onePeriodAgo: 1508360400000,
-    // "12/16/2017"
-    to: 1516021029810,
-  };
-
-  instance.publishedMessages = new ReactiveVar(0);
   instance.trend = new ReactiveVar({});
+  instance.lastUpdatedTime = 0;
+  instance.queryOption = getDateRange('1');
+
+  instance.pubMessagesCount = new ReactiveVar(0);
+  instance.delMessagesCount = new ReactiveVar(0);
+  instance.subClientsCount = new ReactiveVar(0);
+  instance.pubClientsCount = new ReactiveVar(0);
 
   instance.publishedMessagesData = new ReactiveVar();
   instance.deliveredMessagesData = new ReactiveVar();
   instance.publishedClientsData = new ReactiveVar();
   instance.subscribedClientsData = new ReactiveVar();
 
-  instance.lastUpdatedTime = 0;
 
   this.sendRequest = () => {
     this.lastUpdatedTime = this.queryOption.to;
@@ -48,25 +44,43 @@ Template.mqttDashboardPage.onCreated(function () {
     const getPubMessages = getPublishedClients(this.queryOption);
 
     Meteor.call('sendElastisticsearchRequest', getPubMessages, (error, result) => {
-      console.log('message_published', 'send request');
       if (error) {
         sAlert.error(error.message);
       } else {
         const elasticsearchData = result.aggregations.data_over_time.buckets;
 
-        const publishedClientsData = publishedClients(elasticsearchData);
-        console.log('pub_clietns', publishedClientsData)
+        let publishedClientsData = [];
+
         if (elasticsearchData.length === 0) {
           // Set
           elasticsearchData.push({
             doc_count: 0,
             key: this.queryOption.from,
           });
-        }
 
+          publishedClientsData.push({
+            doc_count: 0,
+            key: this.queryOption.from,
+          });
+        } else {
+          publishedClientsData = elasticsearchData.map(dataset => {
+            return {
+              // Get data
+              key: dataset.key,
+              // get count of unique users
+              doc_count: dataset.pub_clients.value,
+            };
+          });
+        }
 
         instance.publishedMessagesData.set(elasticsearchData);
         instance.publishedClientsData.set(publishedClientsData);
+
+        const pubMessagesCount = result.aggregations.total_number.doc_count;
+        instance.pubMessagesCount.set(pubMessagesCount + instance.pubMessagesCount.get());
+
+        const pubClientsCount = result.aggregations.total_number.pub_clients.value;
+        instance.pubClientsCount.set(pubClientsCount + instance.pubClientsCount.get());
       }
     });
 
@@ -74,7 +88,6 @@ Template.mqttDashboardPage.onCreated(function () {
     const getDelMessages = getHistogramData('message_delivered', this.queryOption);
 
     Meteor.call('sendElastisticsearchRequest', getDelMessages, (error, result) => {
-      console.log('message_delivered', 'send request');
       if (error) {
         sAlert.error(error.message);
       } else {
@@ -88,15 +101,16 @@ Template.mqttDashboardPage.onCreated(function () {
         }
 
         this.deliveredMessagesData.set(elasticsearchData);
+
+        const delMessagesCount = result.aggregations.total_number.doc_count;
+        instance.delMessagesCount.set(delMessagesCount + instance.delMessagesCount.get());
       }
     });
-
 
     // fetch data for Published messages
     const getSubClients = getHistogramData('client_subscribe', this.queryOption);
 
     Meteor.call('sendElastisticsearchRequest', getSubClients, (error, result) => {
-      console.log('client_subscribe', 'send request');
       if (error) {
         sAlert.error(error.message);
       } else {
@@ -109,53 +123,57 @@ Template.mqttDashboardPage.onCreated(function () {
           });
         }
 
+        // Data for chart
         this.subscribedClientsData.set(elasticsearchData);
+
+        // Data for total number
+        const subClientsCount = result.aggregations.total_number.doc_count;
+        instance.subClientsCount.set(subClientsCount + instance.subClientsCount.get());
       }
     });
-
-
-    // Meteor.call('publishedMessages', this.queryOption, (error, result) => {
-    //   if (error) {
-    //     sAlert.error(error.message);
-    //   } else {
-    //     const elasticsearchData = result.aggregations.group_by_interval.buckets;
-    //
-    //     const asd = instance.publishedMessages.get();
-    //
-    //     instance.publishedMessages.set(asd+elasticsearchData.currentPeriod.doc_count);
-    //     const trend = {
-    //       comparePubMessages: calculateTrend(elasticsearchData.previousPeriod.doc_count,elasticsearchData.currentPeriod.doc_count)
-    //     };
-    //     console.log(elasticsearchData.previousPeriod.doc_count,elasticsearchData.currentPeriod.doc_count)
-    //
-    //     instance.trend.set(trend);
-    //     // console.log('request number', instance.totalNumber.get())
-    //     //
-    //     // if (elasticsearchData.length === 0) {
-    //     //   elasticsearchData.push({
-    //     //     doc_count: 0,
-    //     //     key: this.queryOption.from,
-    //     //   });
-    //     // }
-    //     //
-    //     // this.aggregatedData.set(elasticsearchData);
-    //   }
-    // });
   };
 
-  this.sendRequest();
+  this.getPreviousNumbers = () => {
+    const previousData = previousTotalNumber(this.queryOption);
 
-  // setInterval(() => {
-  //   this.queryOption.from = this.lastUpdatedTime;
-  //   this.queryOption.to = moment(this.lastUpdatedTime).add(1, 'd').valueOf();
-  //   this.sendRequest();
-  // }, 5000);
+    Meteor.call('sendElastisticsearchRequest', previousData, (error, result) => {
+      if (error) {
+        sAlert.error(error.message);
+      } else {
+        const currentPeriod = result.aggregations.group_by_interval.buckets.currentPeriod;
+        const previousPeriod = result.aggregations.group_by_interval.buckets.previousPeriod;
+
+        const compareData = {
+          pubMessages:
+            calculateTrend(previousPeriod.published.doc_count, currentPeriod.published.doc_count),
+          delMessages:
+            calculateTrend(previousPeriod.message_delivered.doc_count,
+              currentPeriod.message_delivered.doc_count),
+          subClients:
+            calculateTrend(previousPeriod.client_subscribe.doc_count,
+              currentPeriod.client_subscribe.doc_count),
+          pubClients:
+            calculateTrend(previousPeriod.published.pub_clients.value,
+              currentPeriod.published.pub_clients.value),
+        };
+
+        instance.trend.set(compareData);
+      }
+    });
+  };
+
+  instance.intervalId = setInterval(() => {
+    this.queryOption.from = this.lastUpdatedTime;
+    this.queryOption.to = moment(this.lastUpdatedTime).add(60, 's').valueOf();
+    this.queryOption.interval = 'minute';
+    this.sendRequest();
+  }, 10000);
+
+  this.sendRequest();
+  this.getPreviousNumbers();
 });
 
 Template.mqttDashboardPage.helpers({
-  publishedMessages () {
-    return Template.instance().publishedMessages.get();
-  },
   arrowDirection (param) {
     const trend = Template.instance().trend.get();
 
@@ -166,39 +184,12 @@ Template.mqttDashboardPage.helpers({
 
     return percentageValue(param, trend);
   },
-  favoriteTopicsList () {
-    return [
-      {
-        id: '123',
-        value: '#/q/topic',
-        incoming: 24,
-        outgoing: 25,
-        publishedMessages: 123,
-        deliveredMessages: 234,
-        publishedClients: 10,
-        subscribedClients: 20,
-      },
-      {
-        id: '234',
-        value: '#/q/topic1',
-        incoming: 34,
-        outgoing: 35,
-        publishedMessages: 100,
-        deliveredMessages: 200,
-        publishedClients: 15,
-        subscribedClients: 25,
-      },
-      {
-        id: '345',
-        value: '#/q/topic2',
-        incoming: 14,
-        outgoing: 15,
-        publishedMessages: 200,
-        deliveredMessages: 300,
-        publishedClients: 5,
-        subscribedClients: 56,
-      },
-    ];
+  textColor (param) {
+    const trend = Template.instance().trend.get();
+
+    const direction = arrowDirection(param, trend);
+
+    return direction === 'arrow-up' ? 'text-green' : 'text-red';
   },
   // Chart data
   publishedMessagesData () {
@@ -216,28 +207,34 @@ Template.mqttDashboardPage.helpers({
   aclRules () {
     return AclRules.find().fetch();
   },
-});
+  count (param) {
+    const instance = Template.instance();
 
-Template.mqttDashboardPage.events({
+    let count;
 
-});
-
-function publishedClients (elasticsearchData) {
-  // no data
-  if (elasticsearchData.length === 0) {
-    // Return the null data
-    return [{
-      doc_count: 0,
-      key: this.queryOption.from,
-    }]
-  }
-
-  return elasticsearchData.map(dataset => {
-    return {
-      // Get data
-      key: dataset.key,
-      // get count of unique users
-      doc_count: dataset.pub_clients.buckets.length
+    switch (param) {
+      case 'pub-message': {
+        count = instance.pubMessagesCount.get();
+        break;
+      }
+      case 'del-message': {
+        count = instance.delMessagesCount.get();
+        break;
+      }
+      case 'sub-client': {
+        count = instance.subClientsCount.get();
+        break;
+      }
+      case 'pub-client': {
+        count = instance.pubClientsCount.get();
+        break;
+      }
+      default:
+        count = 0;
+        break;
     }
-  });
-}
+
+    return count;
+  },
+});
+

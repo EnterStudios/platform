@@ -7,8 +7,9 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
   <div class="container">
     {{# if Template.subscriptionsReady }}
       <p>
-        {{ topicItem.topic }}
+        {{ topicValue }} {{totalNumber}}
       </p>
+      {{> dateRangePickerMqtt }}
       <div class="row form-group">
         <div class="col-xs-12">
           <label class="radio-inline">
@@ -27,7 +28,7 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
       </div>
       <div class="row">
         <div class="col-xs-6">
-          {{> drawChart aggregatedData=aggregatedData query='published-clients' }}
+          {{> drawChart aggregatedData=aggregatedData query='published-clients' labelFormat=labelFormat}}
         </div>
       </div>
     {{ else }}

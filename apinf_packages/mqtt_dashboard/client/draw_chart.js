@@ -104,4 +104,8 @@ Template.drawChart.onRendered(function () {
       this.chart.update();
     }
   });
+
+  this.autorun(() => {
+    const clearOldData = Template.currentData().clearOldData;
+  });
 });
