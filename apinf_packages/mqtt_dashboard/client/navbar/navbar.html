@@ -4,28 +4,38 @@ You may obtain a copy of the licence at
 https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence-eupl-v11 -->
 
 <template name="mqttDashboardNavbar">
-  <nav class="navbar navbar-default navbar-fixed-top main-navigation">
-    <div class="container">
-      <div class="navbar-header">
-        <img src="/img/hsl_logo.png" alt="">
-      </div>
-      <ul class="nav navbar-nav nanbar-left" id="main-navbar">
-        <li class="{{ isActiveRoute 'mqtt' }}">
-          <a href="{{ pathFor 'mqtt' }}" class="text-uppercase">
-            Mqtt Dashboard
-          </a>
-        </li>
-        <li class="{{ isActiveRoute 'topics' }}">
-          <a href="{{ pathFor 'topics' }}" class="text-uppercase">
-            Topics
-          </a>
-        </li>
-        <li class="{{ isActiveRoute 'acl' }}">
-          <a href="{{ pathFor 'acl' }}" class="text-uppercase">
-            Acl
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+	<div class="navbar-new">
+		<img class="navbar-logo" src="https://i.imgur.com/LYDv7sX.png">
+		<ul class="nav nav-tabs" role="tablist">
+			<li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">MQTT Dashboard</a></li>
+			<li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Topics</a></li>
+			<li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">ACL</a></li>
+			<li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+		</ul>
+	</div>
+
+	<!-- <nav class="navbar navbar-default navbar-fixed-top main-navigation">
+	<div class="container">
+	<div class="navbar-header">
+	<img src="/img/hsl_logo.png" alt="">
+</div>
+<ul class="nav navbar-nav nanbar-left" id="main-navbar">
+<li class="{{ isActiveRoute 'mqtt' }}">
+<a href="{{ pathFor 'mqtt' }}" class="text-uppercase">
+Mqtt Dashboard
+</a>
+</li>
+<li class="{{ isActiveRoute 'topics' }}">
+<a href="{{ pathFor 'topics' }}" class="text-uppercase">
+Topics
+</a>
+</li>
+<li class="{{ isActiveRoute 'acl' }}">
+<a href="{{ pathFor 'acl' }}" class="text-uppercase">
+Acl
+</a>
+</li>
+</ul>
+</div>
+</nav> -->
 </template>
