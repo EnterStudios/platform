@@ -12,14 +12,22 @@
 		border: none;
 	}
 
+	.nav-tabs > li {
+    margin-bottom: 6px;
+	}
+
 	.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
 		border-width: 0;
 	}
 	.nav-tabs > li > a {
 		border: none;
-		color: #80b2e6;
+		color: rgba(255,255,255,0.65);
 		text-transform: uppercase;
 		font-size: 12px;
+		letter-spacing: 0.6px;
+		padding-left: 5px !important;
+		padding-right: 5px !important;
+		margin-right: 20px;
 	}
 	.nav-tabs > li.active > a, .nav-tabs > li > a:hover {
 		border: none;
@@ -33,7 +41,7 @@
 		position: absolute;
 		width: 100%;
 		left: 0px;
-		bottom: 1px;
+		bottom: -6px;
 		transition: all 250ms ease 0s; transform: scale(0);
 	}
 	.nav-tabs > li.active > a::after, .nav-tabs > li:hover > a::after {
@@ -44,7 +52,7 @@
 		color: #fff;
 	}
 	.tab-pane {
-		padding: 15px 0;
+		padding: 5px 0;
 	}
 	.tab-content {
 		padding: 20px

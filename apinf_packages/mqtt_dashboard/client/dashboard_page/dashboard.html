@@ -16,11 +16,9 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
         <strong>Incoming/Outgoing bandwith</strong>
         {{> displayRealTimeChart aggregatedData=aggregatedData query='bandwith' }}
       </div>
-
-      <div class="col-xs-6">
-
-        <div class="row">
-          <div class="col-xs-6 form-group chart-card-sm">
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="col-xs-6 chart-card-sm">
             <div class="form-group">
               <div class="margin-block">
                 <small class="text-uppercase">
@@ -32,7 +30,7 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
                   {{ count 'pub-message' }}
                 </label>
                 <span class={{ textColor 'pub_messages' }}>
-                    <i class="fa fa-{{ arrowDirection 'pub_messages' }}" aria-hidden="true"></i>
+                  <i class="fa fa-{{ arrowDirection 'pub_messages' }}" aria-hidden="true"></i>
                   {{ percentageValue 'pub_messages' }}
                 </span>
               </div>
@@ -40,7 +38,7 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
             {{> displayRealTimeChart aggregatedData=publishedMessagesData query='published-messages' }}
           </div>
 
-          <div class="col-xs-6 form-group">
+          <div class="col-xs-6 chart-card-sm">
             <div class="form-group">
               <div class="margin-block">
                 <small class="text-uppercase">
@@ -52,50 +50,49 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
                   {{ count 'del-message' }}
                 </label>
                 <span class={{ textColor 'del_messages' }}>
-                    <i class="fa fa-{{ arrowDirection 'del_messages' }}" aria-hidden="true"></i>
+                  <i class="fa fa-{{ arrowDirection 'del_messages' }}" aria-hidden="true"></i>
                   {{ percentageValue 'del_messages' }}
                 </span>
               </div>
             </div>
             {{> displayRealTimeChart aggregatedData=deliveredMessagesData query='delivered-messages' }}
           </div>
+        </div>
 
-          <div class="row">
-            <div class="col-xs-6 form-group">
-              <div class="form-group">
-                <div style="margin: 10px;">
-                  <small class="text-uppercase">Published clients</small>
-                </div>
-                <div class="margin-block">
-                  <label class="statistics-numbers">
-                    {{ count 'pub-client' }}
-                  </label>
-                  <span class={{ textColor 'pub_client' }}>
-                    <i class="fa fa-{{ arrowDirection 'pub_client' }}" aria-hidden="true"></i>
-                    {{ percentageValue 'pub_client' }}
-                </span>
-                </div>
+        <div class="row">
+          <div class="col-xs-6 chart-card-sm">
+            <div class="form-group">
+              <div style="margin: 10px;">
+                <small class="text-uppercase">Published clients</small>
               </div>
-              {{> displayRealTimeChart aggregatedData=publishedClientsData query='published-clients' }}
-            </div>
-
-            <div class="col-xs-6 form-group">
-              <div class="form-group">
-                <div style="margin: 10px;">
-                  <small class="text-uppercase">Subscribed clients</small>
-                </div>
-                <div class="margin-block">
-                  <label class="statistics-numbers">
-                    {{ count 'sub-client' }}
-                  </label>
-                  <span class={{ textColor 'sub_client' }}>
-                    <i class="fa fa-{{ arrowDirection 'sub_client' }}" aria-hidden="true"></i>
-                    {{ percentageValue 'sub_client' }}
+              <div class="margin-block">
+                <label class="statistics-numbers">
+                  {{ count 'pub-client' }}
+                </label>
+                <span class={{ textColor 'pub_client' }}>
+                  <i class="fa fa-{{ arrowDirection 'pub_client' }}" aria-hidden="true"></i>
+                  {{ percentageValue 'pub_client' }}
                 </span>
-                </div>
               </div>
-              {{> displayRealTimeChart aggregatedData=subscribedClientsData query='subscribed-clients' }}
             </div>
+            {{> displayRealTimeChart aggregatedData=publishedClientsData query='published-clients' }}
+          </div>
+          <div class="col-xs-6 chart-card-sm">
+            <div class="form-group">
+              <div style="margin: 10px;">
+                <small class="text-uppercase">Subscribed clients</small>
+              </div>
+              <div class="margin-block">
+                <label class="statistics-numbers">
+                  {{ count 'sub-client' }}
+                </label>
+                <span class={{ textColor 'sub_client' }}>
+                  <i class="fa fa-{{ arrowDirection 'sub_client' }}" aria-hidden="true"></i>
+                  {{ percentageValue 'sub_client' }}
+                </span>
+              </div>
+            </div>
+            {{> displayRealTimeChart aggregatedData=subscribedClientsData query='subscribed-clients' }}
           </div>
         </div>
       </div>
@@ -106,7 +103,7 @@ https://joinup.ec.europa.eu/community/eupl/og_page/european-union-public-licence
       </strong>
       <p>Text explains what is it</p>
       {{# if Template.subscriptionsReady }}
-        {{> displayTopicsTable aclRules=aclRules }}
+      {{> displayTopicsTable aclRules=aclRules }}
       {{/ if }}
     </div>
   </div>
